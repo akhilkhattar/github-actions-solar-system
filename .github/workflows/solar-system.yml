@@ -9,7 +9,7 @@ on:
 env:
   MONGO_URI: mongodb+srv://supercluster.d83jj.mongodb.net/superData
   MONGO_USERNAME: superuser
-  MANGO_PASSWORD: ${{secrets.MONGO_PASSWORD}}
+  MONGO_PASSWORD: ${{secrets.MONGO_PASSWORD}}
 jobs:
     unit-testing:
         name: Unit Testing
@@ -30,31 +30,7 @@ jobs:
           run: npm test
           
         - name: Archive Test Result
-          if: failure()
           uses: actions/upload-artifact@v4
           with:
             name: Mocha-Test-Result
             path: test-results.xml
-    code-coverage:
-        name: code-coverage
-        runs-on: ubuntu-latest
-        steps:
-        - name: checkout repo
-          uses: actions/checkout@v4
-        - name: setup nodjs version
-          uses: actions/setup-node@v4
-          with:
-            node-version: 18
-        - name: Install dependencies
-          run: npm install
-        - name: code-coverage
-          continue-on-error: true
-          run: npm run coverage
-        - name: Upload report
-          uses: actions/upload-artifact@v4
-          with:
-            name: Code-Coverage-Result
-            path: coverage
-            retention-days: 5
-
-
