@@ -43,7 +43,7 @@ jobs:
             path: test-results.xml
 
     code-coverage:
-      runs-on: ubuntu_latest
+      runs-on: ubuntu-latest
       steps:
       - name: checkout repo
         uses: actions/checkout@v4
