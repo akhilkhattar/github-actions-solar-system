@@ -185,24 +185,18 @@ jobs:
           with:
             version: 'latest'
     
-        - name: Ensure Helm 3 repositories file exists
-          run: |
-            # Ensure the directory exists for the repositories.yaml file
-            mkdir -p ~/.helm/repository
-            # Create an empty repositories.yaml file if it doesn't exist
-            touch ~/.helm/repository/repositories.yaml || echo "Repositories file already exists."
-  
         - name: Remove outdated Helm repo (if exists)
           run: |
             helm repo remove ingress-nginx || echo "No existing ingress-nginx repo to remove."
   
-        - name: Add Ingress-Nginx repository
-          run: |
-            helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-  
         - name: Clean Helm repository cache
           run: |
             rm -rf ~/.cache/helm/repositories
+            echo "Cleaned Helm repository cache."
+  
+        - name: Add Ingress-Nginx repository
+          run: |
+            helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
   
         - name: Update Helm repositories
           run: |
