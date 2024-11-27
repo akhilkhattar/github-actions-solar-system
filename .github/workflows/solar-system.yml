@@ -174,19 +174,46 @@ jobs:
       steps:
         - name: Checkout Repository
           uses: actions/checkout@v4
-
+          
+        - name: Set up kubectl
+          uses: azure/setup-kubectl@v1
+          with:
+            version: 'latest'
+    
+        - name: Set up Helm
+          uses: azure/setup-helm@v1
+          with:
+            version: 'latest'
 
         - name: Configure AWS credentials
           uses: aws-actions/configure-aws-credentials@v1
           with:
             aws-region: us-east-1
+
         - name: Update kubeconfig
           run: |
             aws eks update-kubeconfig --name staging-cluster --region us-east-1
 
+        - name: Check if namespace exists
+          id: check-namespace
+          run: |
+            kubectl get namespace ingress-nginx || echo "Namespace does not exist"
+          continue-on-error: true
+
+        - name: Create namespace if not exists
+          if: steps.check-namespace.outputs.result == 'Namespace does not exist'
+          run: |
+            kubectl create namespace ingress-nginx
+
+        - name: Deploy NGINX Ingress Controller
+          run: |
+            helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+            helm repo update
+            helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace
+
         - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
           run: |
-            echo "INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller -o jsonpath="{.status. loadBalancer. ingress[0].ip}")" >> $GITHUB_ENV
+            echo INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller -o jsonpath="{.status.loadBalancer.ingress[0].ip}") >> $GITHUB_ENV
 
         - name: Replace Token in manifest files
           uses: cschleiden/replace-tokens@v1
@@ -206,7 +233,7 @@ jobs:
         
         - name: create MangoDB secret
           run: |
-            kubectl create namespace ${{vars.NAMESPACE}}
+            kubectl create namespace ${{vars.NAMESPACE}} \
             kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
             -- from-literal=MONGO_URI=${{env.MONGO_URI}} \
             -- from-literal=MONGO_USERNAME=${{env.MONGO_USERNAME}} \
