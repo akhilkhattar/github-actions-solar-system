@@ -185,6 +185,13 @@ jobs:
           with:
             version: 'latest'
     
+        - name: Ensure Helm 3 repositories file exists
+          run: |
+            # Ensure the directory exists for the repositories.yaml file
+            mkdir -p ~/.helm/repository
+            # Create an empty repositories.yaml file if it doesn't exist
+            touch ~/.helm/repository/repositories.yaml || echo "Repositories file already exists."
+  
         - name: Remove outdated Helm repo (if exists)
           run: |
             helm repo remove ingress-nginx || echo "No existing ingress-nginx repo to remove."
@@ -204,7 +211,7 @@ jobs:
         - name: Verify repositories
           run: |
             helm repo list
-        
+      
         
 
 
