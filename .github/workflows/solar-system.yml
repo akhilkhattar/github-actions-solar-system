@@ -266,7 +266,7 @@ jobs:
         - name: check files
           run: |
             cat kubernetes/development/*.yaml
-        - run: kubectl create namespace ${{vars.NAMESPACE}}
+        # - run: kubectl create namespace ${{vars.NAMESPACE}}
         - name: create MangoDB secret
           run: |
             kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
