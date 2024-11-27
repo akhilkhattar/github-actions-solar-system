@@ -180,11 +180,11 @@ jobs:
           with:
             version: 'latest'
 
-        - name: Set up Helm
+        - name: Set up stable version of Helm
           uses: azure/setup-helm@v1
           with:
-            version: 'latest'
-    
+            version: 'v3.9.4'  # Specify a stable Helm version
+  
         - name: Remove outdated Helm repo (if exists)
           run: |
             helm repo remove ingress-nginx || echo "No existing ingress-nginx repo to remove."
@@ -205,8 +205,6 @@ jobs:
         - name: Verify repositories
           run: |
             helm repo list
-      
-        
 
 
         - name: Configure AWS credentials
