@@ -194,6 +194,11 @@ jobs:
           run: |
             aws eks update-kubeconfig --name staging-cluster --region us-east-1
 
+        - name: Initialize Helm (Helm 3)
+          run: |
+            mkdir -p /home/runner/.helm/repository
+            touch /home/runner/.helm/repository/repositories.yaml
+
         - name: Add Helm repository
           run: |
             helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
