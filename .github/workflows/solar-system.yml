@@ -180,31 +180,31 @@ jobs:
           with:
             version: 'latest'
 
-        - name: Set up stable version of Helm
-          uses: azure/setup-helm@v1
-          with:
-            version: 'v3.9.4'  # Specify a stable Helm version
+        # - name: Set up stable version of Helm
+        #   uses: azure/setup-helm@v1
+        #   with:
+        #     version: 'v3.9.4'  # Specify a stable Helm version
   
-        - name: Remove outdated Helm repo (if exists)
-          run: |
-            helm repo remove ingress-nginx || echo "No existing ingress-nginx repo to remove."
+        # - name: Remove outdated Helm repo (if exists)
+        #   run: |
+        #     helm repo remove ingress-nginx || echo "No existing ingress-nginx repo to remove."
   
-        - name: Clean Helm repository cache
-          run: |
-            rm -rf ~/.cache/helm/repositories
-            echo "Cleaned Helm repository cache."
+        # - name: Clean Helm repository cache
+        #   run: |
+        #     rm -rf ~/.cache/helm/repositories
+        #     echo "Cleaned Helm repository cache."
   
-        - name: Add Ingress-Nginx repository
-          run: |
-            helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+        # - name: Add Ingress-Nginx repository
+        #   run: |
+        #     helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
   
-        - name: Update Helm repositories
-          run: |
-            helm repo update
+        # - name: Update Helm repositories
+        #   run: |
+        #     helm repo update
   
-        - name: Verify repositories
-          run: |
-            helm repo list
+        # - name: Verify repositories
+        #   run: |
+        #     helm repo list
 
 
         - name: Configure AWS credentials
@@ -216,36 +216,40 @@ jobs:
           run: |
             aws eks update-kubeconfig --name staging-cluster --region us-east-1
 
-        - name: Check if namespace exists
-          id: check-namespace
-          run: |
-            if kubectl get namespace ingress-nginx; then
-              echo "Namespace exists"
-            else
-              echo "Namespace does not exist"
-              echo "namespace_exists=false" >> $GITHUB_ENV
-            fi
+        # - name: Check if namespace exists
+        #   id: check-namespace
+        #   run: |
+        #     if kubectl get namespace ingress-nginx; then
+        #       echo "Namespace exists"
+        #     else
+        #       echo "Namespace does not exist"
+        #       echo "namespace_exists=false" >> $GITHUB_ENV
+        #     fi
           
-        - name: Create namespace if not exists
-          if: env.namespace_exists == 'false'
-          run: |
-            kubectl create namespace ingress-nginx
+        # - name: Create namespace if not exists
+        #   if: env.namespace_exists == 'false'
+        #   run: |
+        #     kubectl create namespace ingress-nginx
 
-        - name: Deploy NGINX Ingress Controller
-          run: |
-            kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+        # - name: Deploy NGINX Ingress Controller
+        #   run: |
+        #     kubectl delete job ingress-nginx-admission-create -n ingress-nginx
+        #     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
 
-        - name: Check ingress controller
-          run: |
-            kubectl get pods -n ingress-nginx \
-            kubectl get svc -n ingress-nginx
+
+        #     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+
+        # - name: Check ingress controller
+        #   run: |
+        #     kubectl get pods -n ingress-nginx \
+        #     kubectl get svc -n ingress-nginx
 
 
 
 
         - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
           run: |
-            echo INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller -o jsonpath="{.status.loadBalancer.ingress[0].ip}") >> $GITHUB_ENV
+            echo INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller -o jsonpath="{.status.loadBalancer.ingress[0].hostname}") >> $GITHUB_ENV
 
         - name: Replace Token in manifest files
           uses: cschleiden/replace-tokens@v1
