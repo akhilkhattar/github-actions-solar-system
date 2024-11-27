@@ -10,6 +10,10 @@ env:
   MONGO_URI: mongodb+srv://supercluster.d83jj.mongodb.net/superData
   MONGO_USERNAME: superuser
   MONGO_PASSWORD: ${{secrets.MONGO_PASSWORD}}
+  AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+  AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+  ECR_REPOSITORY: akhil-staging/solar-system
+  IMAGE_TAG: ${{ github.sha }}
 jobs:
     unit-testing:
         name: Unit Testing
@@ -51,115 +55,142 @@ jobs:
             name: Mocha-Test-Result
             path: test-results.xml
 
-    # code-coverage:
-    #   name: Code Coverage
-    #   container: 
-    #       image: node:18
-    #   services:
-    #     mango-db:
-    #       image: siddharth67/mongo-db:non-prod
-    #       options: 
-    #         --name mongo
+    code-coverage:
+      name: Code Coverage
+      container: 
+          image: node:18
+      services:
+        mango-db:
+          image: siddharth67/mongo-db:non-prod
+          options: 
+            --name mongo
           
-    #   env:
-    #       MONGO_URI: mongodb://mongo:27017/superData
-    #       MONGO_USERNAME: non-prod-user
-    #       MONGO_PASSWORD: non-prod-password
-    #   runs-on: ubuntu-latest
-    #   steps:
-    #   - name: checkout repo
-    #     uses: actions/checkout@v4
-    #   # - name: Setup NodeJS Version
-    #   #   uses: actions/setup-node@v4
-    #   #   with:
-    #   #     node-version: 18
+      env:
+          MONGO_URI: mongodb://mongo:27017/superData
+          MONGO_USERNAME: non-prod-user
+          MONGO_PASSWORD: non-prod-password
+      runs-on: ubuntu-latest
+      steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+      # - name: Setup NodeJS Version
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: 18
 
-    #   - name: cache npm dependencies
-    #     uses: actions/cache@v3
-    #     with:
-    #       path: node_modules
-    #       key: ${{runner.os}}-node-modules-${{hashFiles('package-lock.json')}}
-    #   - name: Install Dependencies
-    #     run: npm install
-    #   - name: run code coverage
-    #     continue-on-error: true
-    #     run: npm run coverage
-    #   - name: Archive Test Result
-    #     uses: actions/upload-artifact@v4
-    #     with:
-    #       name: Code-Coverage-Result
-    #       path: coverage
-    #       retention-days: 5
+      - name: cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{runner.os}}-node-modules-${{hashFiles('package-lock.json')}}
+      - name: Install Dependencies
+        run: npm install
+      - name: run code coverage
+        continue-on-error: true
+        run: npm run coverage
+      - name: Archive Test Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: Code-Coverage-Result
+          path: coverage
+          retention-days: 5
 
-    # docker:
-    #     name: containerization
-    #     needs: [unit-testing, code-coverage]
-    #     runs-on: ubuntu-latest
-    #     steps:
-    #     - name: checkout repo
-    #       uses: actions/checkout@v4
+    docker:
+        name: containerization
+        needs: [unit-testing, code-coverage]
+        runs-on: ubuntu-latest
+        steps:
+        - name: checkout repo
+          uses: actions/checkout@v4
 
-    #     - name: Dockerhub login
-    #       uses: docker/login-action@v2.2.0
-    #       with:
-    #         username: ${{vars.DOCKERHUB_USERNAME}}
-    #         password: ${{secrets.DOCKERHUB_PASSWORD}}
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
 
-    #     - name: GHCR login
-    #       uses: docker/login-action@v2.2.0
-    #       with:
-    #         registry: ghcr.io
-    #         username: ${{github.repository_owner}}
-    #         password: ${{secrets.GITHUB_TOKEN}}
+        - name: Log in to Amazon ECR
+          id: login-ecr
+          uses: aws-actions/amazon-ecr-login@v1
+        - name: Build and push Docker image
+          env:
+            ECR_REGISTRY: ${{steps.login-ecr.outputs.registry}}
+          run: |
+            docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    #     - name: Docker build for testing
-    #       uses: docker/build-push-action@v4
-    #       with:
-    #         context: .
-    #         push: false
-    #         tags: ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
 
-    #     - name: Docker Image test
-    #       run: |
-    #         docker images
-    #         docker run --name solar-system-app -d \
-    #             -p 3000:3000 \
-    #             -e MONGO_URI=$MANGO_URI \
-    #             -e MONGO_USERNAME=$MONGO_USERNAME \
-    #             -e MONGO_PASSWORD=$MONGO_PASSWORD \
-    #             ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+        # - name: Dockerhub login
+        #   uses: docker/login-action@v2.2.0
+        #   with:
+        #     username: ${{vars.DOCKERHUB_USERNAME}}
+        #     password: ${{secrets.DOCKERHUB_PASSWORD}}
 
-    #         echo Testing Image URL using wget
-    #         wget -q -O - 127.0.0.1:3000/live | grep live 
+        # - name: GHCR login
+        #   uses: docker/login-action@v2.2.0
+        #   with:
+        #     registry: ghcr.io
+        #     username: ${{github.repository_owner}}
+        #     password: ${{secrets.GITHUB_TOKEN}}
 
-    #     - name: Container registry Push
-    #       uses: docker/build-push-action@v4
-    #       with:
-    #         context: .
-    #         push: true
-    #         tags: |
-    #             ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
-    #             ghcr.io/${{github.repository_owner}}/solar-system:${{github.sha}}
+        # - name: Docker build for testing
+        #   uses: docker/build-push-action@v4
+        #   with:
+        #     context: .
+        #     push: false
+        #     tags: ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+
+        # - name: Docker Image test
+        #   run: |
+        #     docker images
+        #     docker run --name solar-system-app -d \
+        #         -p 3000:3000 \
+        #         -e MONGO_URI=$MANGO_URI \
+        #         -e MONGO_USERNAME=$MONGO_USERNAME \
+        #         -e MONGO_PASSWORD=$MONGO_PASSWORD \
+        #         ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+
+        #     echo Testing Image URL using wget
+        #     wget -q -O - 127.0.0.1:3000/live | grep live 
+
+        # - name: Container registry Push
+        #   uses: docker/build-push-action@v4
+        #   with:
+        #     context: .
+        #     push: true
+        #     tags: |
+        #         ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+        #         ghcr.io/${{github.repository_owner}}/solar-system:${{github.sha}}
 
     dev-deploy:
-      # needs: docker
+      needs: docker
       runs-on: ubuntu-latest
       steps:
         - name: Checkout Repository
           uses: actions/checkout@v4
 
-        - name: Install Kubectl cli
-          uses: azure/setup-kubectl@v4
-          with:
-             version: v1.26.0
-        - name: Set Kubeconfig
-          uses: azure/k8s-set-context@v4
-          with:
-            method: kubeconfig
-            kubeconfig: ${{secrets.KUBECONFIG}}
 
-        - name: Fetch Kubernetest Cluster Details
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v1
+          with:
+            aws-region: us-east-1
+        - name: Update kubeconfig
           run: |
-            kubectl version --short
-            echo -----------------------------
-            kubectl get nodes
+            aws eks update-kubeconfig --name staging-cluster --region us-east-1
+
+        - name: Deploy to EKS
+          run: |
+            kubectl set image deployment/solar-system my-container=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+        # - name: Install Kubectl cli
+        #   uses: azure/setup-kubectl@v4
+        #   with:
+        #      version: v1.26.0
+        # - name: Set Kubeconfig
+        #   uses: azure/k8s-set-context@v4
+        #   with:
+        #     method: kubeconfig
+        #     kubeconfig: ${{secrets.KUBECONFIG}}
+
+        # - name: Fetch Kubernetest Cluster Details
+        #   run: |
+        #     kubectl version --short
+        #     echo -----------------------------
+        #     kubectl get nodes
