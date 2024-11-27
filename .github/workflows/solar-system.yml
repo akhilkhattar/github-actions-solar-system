@@ -194,6 +194,11 @@ jobs:
           run: |
             aws eks update-kubeconfig --name staging-cluster --region us-east-1
 
+        - name: Add Helm repository
+          run: |
+            helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+            helm repo update
+
         - name: Check if namespace exists
           id: check-namespace
           run: |
@@ -207,8 +212,6 @@ jobs:
 
         - name: Deploy NGINX Ingress Controller
           run: |
-            helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-            helm repo update
             helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace
 
         - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
