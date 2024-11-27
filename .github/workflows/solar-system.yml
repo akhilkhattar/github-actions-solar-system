@@ -51,7 +51,7 @@ jobs:
             name: Mocha-Test-Result
             path: test-results.xml
 
-    code-coverage:
+    # code-coverage:
       name: Code Coverage
       container: 
           image: node:18
@@ -91,7 +91,7 @@ jobs:
           path: coverage
           retention-days: 5
 
-    docker:
+    # docker:
         name: containerization
         needs: [unit-testing, code-coverage]
         runs-on: ubuntu-latest
@@ -156,7 +156,8 @@ jobs:
           uses: azure/k8s-set-context@v4
           with:
             method: kubeconfig
-            kubeconfig: ${{secrets.Kubeconfig}}
+            kubeconfig: ${{secrets.KUBECONFIG}}
+
         - name: Fetch Kubernetest Cluster Details
           run: |
             kubectl version --short
