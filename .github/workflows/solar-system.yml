@@ -219,17 +219,21 @@ jobs:
         - name: Check if namespace exists
           id: check-namespace
           run: |
-            kubectl get namespace ingress-nginx || echo "Namespace does not exist"
-          continue-on-error: true
-
+            if kubectl get namespace ingress-nginx; then
+              echo "Namespace exists"
+            else
+              echo "Namespace does not exist"
+              echo "namespace_exists=false" >> $GITHUB_ENV
+            fi
+          
         - name: Create namespace if not exists
-          if: steps.check-namespace.outputs.result == 'Namespace does not exist'
+          if: env.namespace_exists == 'false'
           run: |
             kubectl create namespace ingress-nginx
 
         - name: Deploy NGINX Ingress Controller
           run: |
-            helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace
+            helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace --timeout 600s
 
         - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
           run: |
