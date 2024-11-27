@@ -214,7 +214,7 @@ jobs:
 
         - name: Update kubeconfig
           run: |
-            aws eks update-kubeconfig --name staging-cluster --region us-east-1
+            aws eks update-kubeconfig --name my-cluster --region us-east-1
 
         # - name: Check if namespace exists
         #   id: check-namespace
