@@ -233,7 +233,10 @@ jobs:
 
         - name: Deploy NGINX Ingress Controller
           run: |
-            helm install nginx-ingress ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace
+            kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml \
+            kubectl get pods -n ingress-nginx \
+            kubectl get svc -n ingress-nginx
+
 
 
         - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
