@@ -184,6 +184,22 @@ jobs:
           run: |
             aws eks update-kubeconfig --name staging-cluster --region us-east-1
 
+        - name: Replace Token in manifest files
+          uses: cschleiden/replace-tokens@v1
+          with:
+            tokenPrefix: '_{_'
+            tokenSuffix: '_}_'
+            files: '["kubernetes/development/*.yaml"]'
+          env:
+            NAMESPACE: ${{vars.NAMESPACE}}
+            REPLICAS: ${{vars.REPLICAS}}
+            IMAGE: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+        - name: check files
+          run: |
+            cat kubernetes/development/*.yaml
+        
+
         - name: Deploy to EKS
           run: |
             kubectl set image deployment/solar-system my-container=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
