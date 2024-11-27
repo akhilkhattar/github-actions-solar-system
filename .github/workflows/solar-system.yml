@@ -275,7 +275,8 @@ jobs:
             -- from-literal=MONGO_PASSWORD=${{secrets.MONGO_PASSWORD}} \
             -- save-config \
             -- dry-run=client \
-            -o yaml | kubectl apply -f -
+            -- validate=false
+            -o json | kubectl apply -f -
 
         - name: Deploy to Dev Env in EKS
           run: |
