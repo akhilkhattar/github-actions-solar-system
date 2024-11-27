@@ -233,7 +233,8 @@ jobs:
 
         - name: Deploy NGINX Ingress Controller
           run: |
-            helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace --timeout 600s
+            helm install nginx-ingress ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace
+
 
         - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
           run: |
