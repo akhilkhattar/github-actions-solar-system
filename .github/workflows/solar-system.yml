@@ -280,7 +280,7 @@ jobs:
             -- validate=false \
             -o yaml | kubectl apply -f -
 
-        - name: Deploy to Dev Env in EKS
+        - name: Deploy to Dev Env EKS
           run: |
             kubectl apply -f kubernetes/development
 
