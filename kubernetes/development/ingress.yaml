@@ -8,7 +8,7 @@ metadata:
   namespace: _{_NAMESPACE_}_
 spec:
     rules:
-    - host: solar-system-a57febd2dc6524b38995a204b169ab1f-838163486.us-east-1.elb.amazonaws.com.nip.io
+    - host: solar-system-development.a57febd2dc6524b38995a204b169ab1f-838163486.us-east-1.elb.amazonaws.com.nip.io
       http:
         paths:
         - backend:
