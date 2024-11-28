@@ -96,77 +96,77 @@ jobs:
 #           path: coverage
 #           retention-days: 5
 
-    # docker:
-    #     name: containerization
-    #     # needs: [unit-testing, code-coverage]
-    #     runs-on: ubuntu-latest
-    #     steps:
-    #     - name: checkout repo
-    #       uses: actions/checkout@v4
+    docker:
+        name: containerization
+        # needs: [unit-testing, code-coverage]
+        runs-on: ubuntu-latest
+        steps:
+        - name: checkout repo
+          uses: actions/checkout@v4
 
-    #     - name: Set up Docker Buildx
-    #       uses: docker/setup-buildx-action@v1
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
 
-    #     - name: Configure AWS credentials
-    #       uses: aws-actions/configure-aws-credentials@v2 # More information on this action can be found below in the 'AWS Credentials' section
-    #       with:
-    #         aws-region: ${{env.aws-region}}
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v2 # More information on this action can be found below in the 'AWS Credentials' section
+          with:
+            aws-region: ${{env.aws-region}}
 
-    #     - name: Log in to Amazon ECR
-    #       id: login-ecr
-    #       uses: aws-actions/amazon-ecr-login@v1
-    #       with:
-    #         mask-password: 'true'
+        - name: Log in to Amazon ECR
+          id: login-ecr
+          uses: aws-actions/amazon-ecr-login@v1
+          with:
+            mask-password: 'true'
 
-    #     - name: Build and push Docker image
-    #       env:
-    #         ECR_REGISTRY: ${{steps.login-ecr.outputs.registry}}
-    #       run: |
-    #         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-    #         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        - name: Build and push Docker image
+          env:
+            ECR_REGISTRY: ${{steps.login-ecr.outputs.registry}}
+          run: |
+            docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
 
-    #     # - name: Dockerhub login
-    #     #   uses: docker/login-action@v2.2.0
-    #     #   with:
-    #     #     username: ${{vars.DOCKERHUB_USERNAME}}
-    #     #     password: ${{secrets.DOCKERHUB_PASSWORD}}
+        # - name: Dockerhub login
+        #   uses: docker/login-action@v2.2.0
+        #   with:
+        #     username: ${{vars.DOCKERHUB_USERNAME}}
+        #     password: ${{secrets.DOCKERHUB_PASSWORD}}
 
-    #     # - name: GHCR login
-    #     #   uses: docker/login-action@v2.2.0
-    #     #   with:
-    #     #     registry: ghcr.io
-    #     #     username: ${{github.repository_owner}}
-    #     #     password: ${{secrets.GITHUB_TOKEN}}
+        # - name: GHCR login
+        #   uses: docker/login-action@v2.2.0
+        #   with:
+        #     registry: ghcr.io
+        #     username: ${{github.repository_owner}}
+        #     password: ${{secrets.GITHUB_TOKEN}}
 
-    #     # - name: Docker build for testing
-    #     #   uses: docker/build-push-action@v4
-    #     #   with:
-    #     #     context: .
-    #     #     push: false
-    #     #     tags: ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+        # - name: Docker build for testing
+        #   uses: docker/build-push-action@v4
+        #   with:
+        #     context: .
+        #     push: false
+        #     tags: ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
 
-    #     # - name: Docker Image test
-    #     #   run: |
-    #     #     docker images
-    #     #     docker run --name solar-system-app -d \
-    #     #         -p 3000:3000 \
-    #     #         -e MONGO_URI=$MANGO_URI \
-    #     #         -e MONGO_USERNAME=$MONGO_USERNAME \
-    #     #         -e MONGO_PASSWORD=$MONGO_PASSWORD \
-    #     #         ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+        # - name: Docker Image test
+        #   run: |
+        #     docker images
+        #     docker run --name solar-system-app -d \
+        #         -p 3000:3000 \
+        #         -e MONGO_URI=$MANGO_URI \
+        #         -e MONGO_USERNAME=$MONGO_USERNAME \
+        #         -e MONGO_PASSWORD=$MONGO_PASSWORD \
+        #         ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
 
-    #     #     echo Testing Image URL using wget
-    #     #     wget -q -O - 127.0.0.1:3000/live | grep live 
+        #     echo Testing Image URL using wget
+        #     wget -q -O - 127.0.0.1:3000/live | grep live 
 
-    #     # - name: Container registry Push
-    #     #   uses: docker/build-push-action@v4
-    #     #   with:
-    #     #     context: .
-    #     #     push: true
-    #     #     tags: |
-    #     #         ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
-    #     #         ghcr.io/${{github.repository_owner}}/solar-system:${{github.sha}}
+        # - name: Container registry Push
+        #   uses: docker/build-push-action@v4
+        #   with:
+        #     context: .
+        #     push: true
+        #     tags: |
+        #         ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+        #         ghcr.io/${{github.repository_owner}}/solar-system:${{github.sha}}
 
     dev-deploy:
       # needs: docker
