@@ -267,6 +267,7 @@ jobs:
           run: |
             cat kubernetes/development/*.yaml
         - run: kubectl create namespace ${{vars.NAMESPACE}}
+          continue-on-error: true
 
         - name: create MangoDB secret
           run: |
