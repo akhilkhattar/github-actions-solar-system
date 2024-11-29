@@ -114,18 +114,18 @@ jobs:
 
         - name: Log in to Amazon ECR
           id: login-ecr
-          uses: aws-actions/amazon-ecr-login@v1
+          uses: aws-actions/amazon-ecr-login@v2
           with:
             mask-password: 'true'
 
-        - name: Build and push Docker image
+        - name: Build, tag, and push image to Amazon ECR
           env:
-            REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            REPOSITORY: akhil-staging/solar-system
+            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+            ECR_REPOSITORY: my-repo  # Change to your ECR repository name
             IMAGE_TAG: ${{ github.sha }}
           run: |
-            docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
-            docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+            docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
 
         # - name: Dockerhub login
@@ -249,9 +249,9 @@ jobs:
 
 
 
-        # - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
-        #   run: |
-        #     echo INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller -o jsonpath="{.status.loadBalancer.ingress[0].hostname}") >> $GITHUB_ENV
+        - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
+          run: |
+            echo INGRESS_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].hostname}') >> $GITHUB_ENV
 
         - name: Replace Token in manifest files
           uses: cschleiden/replace-tokens@v1
@@ -263,7 +263,7 @@ jobs:
             NAMESPACE: ${{vars.NAMESPACE}}
             REPLICAS: ${{vars.REPLICAS}}
             IMAGE: 058264486951.dkr.ecr.us-east-1.amazonaws.com/akhil-staging/solar-system:${{ github.sha }}
-            # INGRESS_IP: ${{env.INGRESS_IP}}
+            INGRESS_IP: ${{env.INGRESS_IP}}
 
         - name: check files
           run: |
