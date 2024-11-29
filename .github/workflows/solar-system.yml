@@ -16,162 +16,163 @@ env:
   IMAGE_TAG: ${{ github.sha }}
   aws-region: us-east-1
 jobs:
-    unit-testing:
-        name: Unit Testing
-        services:
-          mango-db:
-            image: siddharth67/mongo-db:non-prod
-            ports:
-              - 27017:27017
-        env:
-            MONGO_URI: mongodb://localhost:27017/superData
-            MONGO_USERNAME: non-prod-user
-            MONGO_PASSWORD: non-prod-password
-        runs-on: ubuntu-latest
-        steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
 
-        - name: Setup NodeJS Version
-          uses: actions/setup-node@v4
-          with:
-            node-version: 20
+    # unit-testing:
+    #     name: Unit Testing
+    #     services:
+    #       mango-db:
+    #         image: siddharth67/mongo-db:non-prod
+    #         ports:
+    #           - 27017:27017
+    #     env:
+    #         MONGO_URI: mongodb://localhost:27017/superData
+    #         MONGO_USERNAME: non-prod-user
+    #         MONGO_PASSWORD: non-prod-password
+    #     runs-on: ubuntu-latest
+    #     steps:
+    #     - name: Checkout Repository
+    #       uses: actions/checkout@v4
 
-        - name: cache npm dependencies
-          uses: actions/cache@v3
-          with:
-            path: node_modules
-            key: ${{runner.os}}-node-modules-${{hashFiles('package-lock.json')}}
+    #     - name: Setup NodeJS Version
+    #       uses: actions/setup-node@v4
+    #       with:
+    #         node-version: 20
+
+    #     - name: cache npm dependencies
+    #       uses: actions/cache@v3
+    #       with:
+    #         path: node_modules
+    #         key: ${{runner.os}}-node-modules-${{hashFiles('package-lock.json')}}
     
-        - name: Install Dependencies
-          run: npm install
+    #     - name: Install Dependencies
+    #       run: npm install
     
-        - name: Unit Testing
-          run: npm test
+    #     - name: Unit Testing
+    #       run: npm test
           
-        - name: Archive Test Result
-          if: always()
-          uses: actions/upload-artifact@v4
-          with:
-            name: Mocha-Test-Result
-            path: test-results.xml
+    #     - name: Archive Test Result
+    #       if: always()
+    #       uses: actions/upload-artifact@v4
+    #       with:
+    #         name: Mocha-Test-Result
+    #         path: test-results.xml
 
-    code-coverage:
-      name: Code Coverage
-      container: 
-          image: node:18
-      services:
-        mango-db:
-          image: siddharth67/mongo-db:non-prod
-          options: 
-            --name mongo
+    # code-coverage:
+    #   name: Code Coverage
+    #   container: 
+    #       image: node:18
+    #   services:
+    #     mango-db:
+    #       image: siddharth67/mongo-db:non-prod
+    #       options: 
+    #         --name mongo
           
-      env:
-          MONGO_URI: mongodb://mongo:27017/superData
-          MONGO_USERNAME: non-prod-user
-          MONGO_PASSWORD: non-prod-password
-      runs-on: ubuntu-latest
-      steps:
-      - name: checkout repo
-        uses: actions/checkout@v4
-      # - name: Setup NodeJS Version
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: 18
+    #   env:
+    #       MONGO_URI: mongodb://mongo:27017/superData
+    #       MONGO_USERNAME: non-prod-user
+    #       MONGO_PASSWORD: non-prod-password
+    #   runs-on: ubuntu-latest
+    #   steps:
+    #   - name: checkout repo
+    #     uses: actions/checkout@v4
+    #   # - name: Setup NodeJS Version
+    #   #   uses: actions/setup-node@v4
+    #   #   with:
+    #   #     node-version: 18
 
-      - name: cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{runner.os}}-node-modules-${{hashFiles('package-lock.json')}}
-      - name: Install Dependencies
-        run: npm install
-      - name: run code coverage
-        continue-on-error: true
-        run: npm run coverage
-      - name: Archive Test Result
-        uses: actions/upload-artifact@v4
-        with:
-          name: Code-Coverage-Result
-          path: coverage
-          retention-days: 5
+    #   - name: cache npm dependencies
+    #     uses: actions/cache@v3
+    #     with:
+    #       path: node_modules
+    #       key: ${{runner.os}}-node-modules-${{hashFiles('package-lock.json')}}
+    #   - name: Install Dependencies
+    #     run: npm install
+    #   - name: run code coverage
+    #     continue-on-error: true
+    #     run: npm run coverage
+    #   - name: Archive Test Result
+    #     uses: actions/upload-artifact@v4
+    #     with:
+    #       name: Code-Coverage-Result
+    #       path: coverage
+    #       retention-days: 5
 
-    docker:
-        name: containerization
-        needs: [unit-testing, code-coverage]
-        runs-on: ubuntu-latest
-        steps:
-        - name: checkout repo
-          uses: actions/checkout@v4
+    # docker:
+    #     name: containerization
+    #     needs: [unit-testing, code-coverage]
+    #     runs-on: ubuntu-latest
+    #     steps:
+    #     - name: checkout repo
+    #       uses: actions/checkout@v4
 
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v1
+    #     - name: Set up Docker Buildx
+    #       uses: docker/setup-buildx-action@v1
 
-        - name: Configure AWS credentials
-          uses: aws-actions/configure-aws-credentials@v2 # More information on this action can be found below in the 'AWS Credentials' section
-          with:
-            aws-region: ${{env.aws-region}}
+    #     - name: Configure AWS credentials
+    #       uses: aws-actions/configure-aws-credentials@v2 # More information on this action can be found below in the 'AWS Credentials' section
+    #       with:
+    #         aws-region: ${{env.aws-region}}
 
-        - name: Log in to Amazon ECR
-          id: login-ecr
-          uses: aws-actions/amazon-ecr-login@v2
-          with:
-            mask-password: 'true'
+    #     - name: Log in to Amazon ECR
+    #       id: login-ecr
+    #       uses: aws-actions/amazon-ecr-login@v2
+    #       with:
+    #         mask-password: 'true'
 
-        - name: Build, tag, and push image to Amazon ECR
-          env:
-            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            ECR_REPOSITORY: akhil-staging/solar-system  # Change to your ECR repository name
-            IMAGE_TAG: ${{ github.sha }}
-          run: |
-            docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    #     - name: Build, tag, and push image to Amazon ECR
+    #       env:
+    #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+    #         ECR_REPOSITORY: akhil-staging/solar-system  # Change to your ECR repository name
+    #         IMAGE_TAG: ${{ github.sha }}
+    #       run: |
+    #         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+    #         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
 
-        # - name: Dockerhub login
-        #   uses: docker/login-action@v2.2.0
-        #   with:
-        #     username: ${{vars.DOCKERHUB_USERNAME}}
-        #     password: ${{secrets.DOCKERHUB_PASSWORD}}
+    #     # - name: Dockerhub login
+    #     #   uses: docker/login-action@v2.2.0
+    #     #   with:
+    #     #     username: ${{vars.DOCKERHUB_USERNAME}}
+    #     #     password: ${{secrets.DOCKERHUB_PASSWORD}}
 
-        # - name: GHCR login
-        #   uses: docker/login-action@v2.2.0
-        #   with:
-        #     registry: ghcr.io
-        #     username: ${{github.repository_owner}}
-        #     password: ${{secrets.GITHUB_TOKEN}}
+    #     # - name: GHCR login
+    #     #   uses: docker/login-action@v2.2.0
+    #     #   with:
+    #     #     registry: ghcr.io
+    #     #     username: ${{github.repository_owner}}
+    #     #     password: ${{secrets.GITHUB_TOKEN}}
 
-        # - name: Docker build for testing
-        #   uses: docker/build-push-action@v4
-        #   with:
-        #     context: .
-        #     push: false
-        #     tags: ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+    #     # - name: Docker build for testing
+    #     #   uses: docker/build-push-action@v4
+    #     #   with:
+    #     #     context: .
+    #     #     push: false
+    #     #     tags: ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
 
-        # - name: Docker Image test
-        #   run: |
-        #     docker images
-        #     docker run --name solar-system-app -d \
-        #         -p 3000:3000 \
-        #         -e MONGO_URI=$MANGO_URI \
-        #         -e MONGO_USERNAME=$MONGO_USERNAME \
-        #         -e MONGO_PASSWORD=$MONGO_PASSWORD \
-        #         ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+    #     # - name: Docker Image test
+    #     #   run: |
+    #     #     docker images
+    #     #     docker run --name solar-system-app -d \
+    #     #         -p 3000:3000 \
+    #     #         -e MONGO_URI=$MANGO_URI \
+    #     #         -e MONGO_USERNAME=$MONGO_USERNAME \
+    #     #         -e MONGO_PASSWORD=$MONGO_PASSWORD \
+    #     #         ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
 
-        #     echo Testing Image URL using wget
-        #     wget -q -O - 127.0.0.1:3000/live | grep live 
+    #     #     echo Testing Image URL using wget
+    #     #     wget -q -O - 127.0.0.1:3000/live | grep live 
 
-        # - name: Container registry Push
-        #   uses: docker/build-push-action@v4
-        #   with:
-        #     context: .
-        #     push: true
-        #     tags: |
-        #         ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
-        #         ghcr.io/${{github.repository_owner}}/solar-system:${{github.sha}}
+    #     # - name: Container registry Push
+    #     #   uses: docker/build-push-action@v4
+    #     #   with:
+    #     #     context: .
+    #     #     push: true
+    #     #     tags: |
+    #     #         ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+    #     #         ghcr.io/${{github.repository_owner}}/solar-system:${{github.sha}}
 
     dev-deploy:
-      needs: docker
+      # needs: docker
       runs-on: ubuntu-latest
       steps:
         - name: Checkout Repository
@@ -246,56 +247,61 @@ jobs:
         #     kubectl get pods -n ingress-nginx \
         #     kubectl get svc -n ingress-nginx
 
+        - name: Apply Deployment
+          run: kubectl apply -f hello\hello-world-deployment.yaml
+  
+        - name: Apply Service
+          run: kubectl apply -f hello\hello-world-service.yaml
+  
 
 
-
-        - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
-          run: |
-            echo INGRESS_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].hostname}') >> $GITHUB_ENV
-
-        - name: Replace Token in manifest files
-          uses: cschleiden/replace-tokens@v1
-          with:
-            tokenPrefix: '_{_'
-            tokenSuffix: '_}_'
-            files: '["kubernetes/development/*.yaml"]'
-          env:
-            NAMESPACE: ${{vars.NAMESPACE}}
-            REPLICAS: ${{vars.REPLICAS}}
-            IMAGE: 058264486951.dkr.ecr.us-east-1.amazonaws.com/akhil-staging/solar-system:${{ github.sha }}
-            INGRESS_IP: ${{env.INGRESS_IP}}
-
-        - name: check files
-          run: |
-            cat kubernetes/development/*.yaml
-        - run: kubectl create namespace ${{vars.NAMESPACE}}
-          continue-on-error: true
-
-        - name: create MangoDB secret
-          run: |
-            kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
-              --from-literal=MONGO_URI=${{env.MONGO_URI}} \
-              --from-literal=MONGO_USERNAME=${{env.MONGO_USERNAME}} \
-              --from-literal=MONGO_PASSWORD=${{secrets.MONGO_PASSWORD}} \
-              --dry-run=client \
-              -o yaml | kubectl apply -f - --validate=false
-
-        - name: Deploy to Dev Env in EKS
-          run: |
-            kubectl apply -f kubernetes/development
-
-        # - name: Install Kubectl cli
-        #   uses: azure/setup-kubectl@v4
-        #   with:
-        #      version: v1.26.0
-        # - name: Set Kubeconfig
-        #   uses: azure/k8s-set-context@v4
-        #   with:
-        #     method: kubeconfig
-        #     kubeconfig: ${{secrets.KUBECONFIG}}
-
-        # - name: Fetch Kubernetest Cluster Details
+        # - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
         #   run: |
-        #     kubectl version --short
-        #     echo -----------------------------
-        #     kubectl get nodes
+        #     echo INGRESS_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].hostname}') >> $GITHUB_ENV
+
+        # - name: Replace Token in manifest files
+        #   uses: cschleiden/replace-tokens@v1
+        #   with:
+        #     tokenPrefix: '_{_'
+        #     tokenSuffix: '_}_'
+        #     files: '["kubernetes/development/*.yaml"]'
+        #   env:
+        #     NAMESPACE: ${{vars.NAMESPACE}}
+        #     REPLICAS: ${{vars.REPLICAS}}
+        #     IMAGE: 058264486951.dkr.ecr.us-east-1.amazonaws.com/akhil-staging/solar-system:${{ github.sha }}
+        #     INGRESS_IP: ${{env.INGRESS_IP}}
+
+        # - name: check files
+        #   run: |
+        #     cat kubernetes/development/*.yaml
+        # - run: kubectl create namespace ${{vars.NAMESPACE}}
+        #   continue-on-error: true
+
+        # - name: create MangoDB secret
+        #   run: |
+        #     kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
+        #       --from-literal=MONGO_URI=${{env.MONGO_URI}} \
+        #       --from-literal=MONGO_USERNAME=${{env.MONGO_USERNAME}} \
+        #       --from-literal=MONGO_PASSWORD=${{secrets.MONGO_PASSWORD}} \
+        #       --dry-run=client \
+        #       -o yaml | kubectl apply -f - --validate=false
+
+        # - name: Deploy to Dev Env in EKS
+        #   run: |
+        #     kubectl apply -f kubernetes/development
+
+        # # - name: Install Kubectl cli
+        # #   uses: azure/setup-kubectl@v4
+        # #   with:
+        # #      version: v1.26.0
+        # # - name: Set Kubeconfig
+        # #   uses: azure/k8s-set-context@v4
+        # #   with:
+        # #     method: kubeconfig
+        # #     kubeconfig: ${{secrets.KUBECONFIG}}
+
+        # # - name: Fetch Kubernetest Cluster Details
+        # #   run: |
+        # #     kubectl version --short
+        # #     echo -----------------------------
+        # #     kubectl get nodes
