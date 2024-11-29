@@ -8,7 +8,7 @@ metadata:
   namespace: _{_NAMESPACE_}_
 spec:
     rules:
-    - host: xyz.com
+    - host: solar-system-_{_NAMESPACE_}_a711598ec6d994a7f85ac44421559788-596702058.us-east-1.elb.amazonaws.com.nip.io
       http:
         paths:
         - backend:
@@ -20,5 +20,5 @@ spec:
           pathType: Prefix
     tls:
     - hosts:
-      - solar-system-a57febd2dc6524b38995a204b169ab1f-838163486.us-east-1.elb.amazonaws.com.nip.io
+      - solar-system-_{_NAMESPACE_}_a711598ec6d994a7f85ac44421559788-596702058.us-east-1.elb.amazonaws.com.nip.io
       secretName: ingress-local-tls
