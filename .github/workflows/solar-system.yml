@@ -249,9 +249,8 @@ jobs:
 
         - name: Apply Deployment
           run: | 
-            kubectl apply -f hello/hello-world-deployment.yaml,
-            kubectl apply -f hello/hello-world-service.yaml
-  
+            kubectl apply -f hello/
+            
         # - name: Apply Service
         #   run: kubectl apply -f hello/hello-world-service.yaml
 
