@@ -8,7 +8,7 @@ metadata:
   namespace: _{_NAMESPACE_}_
 spec:
     rules:
-    - host: a270c7ae4dc8d4343a11395e5a4fd3e1-1067918871.us-east-1.elb.amazonaws.com
+    - host: ${{env.INGRESS_IP}}
       http:
         paths:
         - backend:
