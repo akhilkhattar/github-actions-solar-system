@@ -8,7 +8,8 @@ metadata:
   namespace: _{_NAMESPACE_}_
 spec:
     rules:
-    - host: _{_INGRESS_IP_}_
+    # - host: _{_INGRESS_IP_}_
+    - host: solar-system.test.kolly38.com
       http:
         paths:
         - backend:
