@@ -197,6 +197,42 @@ jobs:
           run: |
             aws eks update-kubeconfig --name demo-eks --region us-east-1
 
+        # - name: Check if namespace exists
+        #   id: check-namespace
+        #   run: |
+        #     if kubectl get namespace ingress-nginx; then
+        #       echo "Namespace exists"
+        #     else
+        #       echo "Namespace does not exist"
+        #       echo "namespace_exists=false" >> $GITHUB_ENV
+        #     fi
+          
+        # - name: Create namespace if not exists
+        #   if: env.namespace_exists == 'false'
+        #   run: |
+        #     kubectl create namespace ingress-nginx
+
+        # - name: Deploy NGINX Ingress Controller
+        #   run: |
+        #     kubectl delete job ingress-nginx-admission-create -n ingress-nginx
+        #     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+
+
+        #     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+
+        # - name: Check ingress controller
+        #   run: |
+        #     kubectl get pods -n ingress-nginx \
+        #     kubectl get svc -n ingress-nginx
+
+        # - name: Apply Deployment
+        #   run: | 
+        #     kubectl apply -f hello/
+            
+        # - name: Apply Service
+        #   run: kubectl apply -f hello/hello-world-service.yaml
+
+
         - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
           run: |
             echo INGRESS_IP=$(kubectl get svc nginx-ingress-ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].hostname}') >> $GITHUB_ENV
@@ -210,7 +246,7 @@ jobs:
           env:
             NAMESPACE: ${{vars.NAMESPACE}}
             REPLICAS: ${{vars.REPLICAS}}
-            IMAGE: akhil-staging/solar-system:${{ github.sha }}
+            IMAGE: 211125578268.dkr.ecr.us-east-1.amazonaws.com/akhil-staging/solar-system:${{ github.sha }}
             INGRESS_IP: ${{env.INGRESS_IP}}
 
         - name: check files
@@ -238,7 +274,7 @@ jobs:
             echo "APP_INGRESS_HOST=$(kubectl get ing -n ${{vars.NAMESPACE}} -o jsonpath='{.items[0].spec.rules[0].host}')" >> "$GITHUB_OUTPUT"
 
 
-    dev-integration-testing:
+    integration-testing:
       needs: dev-deploy
       runs-on: ubuntu-latest
       steps:
@@ -251,83 +287,18 @@ jobs:
             curl http://$URL/live -s -k | jq -r .status | grep -i live
 
 
-    prod-deploy:
-      needs: dev-integration-testing
-      environment:
-        name: production
-        url: http://${{steps.set-ingress-host-address.outputs.APP_INGRESS_HOST}}
-      outputs:
-        APP_INGRESS_URL: ${{steps.set-ingress-host-address.outputs.APP_INGRESS_HOST}}
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
-          
-        - name: Set up kubectl
-          uses: azure/setup-kubectl@v1
-          with:
-            version: 'latest'
+        # # - name: Install Kubectl cli
+        # #   uses: azure/setup-kubectl@v4
+        # #   with:
+        # #      version: v1.26.0
+        # # - name: Set Kubeconfig
+        # #   uses: azure/k8s-set-context@v4
+        # #   with:
+        # #     method: kubeconfig
+        # #     kubeconfig: ${{secrets.KUBECONFIG}}
 
-        - name: Configure AWS credentials
-          uses: aws-actions/configure-aws-credentials@v1
-          with:
-            aws-region: us-east-1
-
-        - name: Update kubeconfig
-          run: |
-            aws eks update-kubeconfig --name demo-eks --region us-east-1
-
-        - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
-          run: |
-            echo INGRESS_IP=$(kubectl get svc nginx-ingress-ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].hostname}') >> $GITHUB_ENV
-
-        - name: Replace Token in manifest files
-          uses: cschleiden/replace-tokens@v1
-          with:
-            tokenPrefix: '_{_'
-            tokenSuffix: '_}_'
-            files: '["kubernetes/production/*.yaml"]'
-          env:
-            NAMESPACE: ${{vars.NAMESPACE}}
-            REPLICAS: ${{vars.REPLICAS}}
-            IMAGE: ${{ github.sha }}
-            INGRESS_IP: ${{env.INGRESS_IP}}
-
-        - name: check files
-          run: |
-            cat kubernetes/production/*.yaml
-
-        - run: kubectl create namespace ${{vars.NAMESPACE}}
-          continue-on-error: true
-
-        - name: create MangoDB secret
-          run: |
-            kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
-              --from-literal=MONGO_URI=${{env.MONGO_URI}} \
-              --from-literal=MONGO_USERNAME=${{env.MONGO_USERNAME}} \
-              --from-literal=MONGO_PASSWORD=${{secrets.MONGO_PASSWORD}} \
-              --dry-run=client \
-              -o yaml | kubectl apply -f - --validate=false
-
-        - name: Deploy to Dev Env in EKS
-          run: |
-            kubectl apply -f kubernetes/production
-
-        - name: Set App Ingress Host URL
-          id: set-ingress-host-address
-          run: |
-            echo "APP_INGRESS_HOST=$(kubectl get ing -n ${{vars.NAMESPACE}} -o jsonpath='{.items[0].spec.rules[0].host}')" >> "$GITHUB_OUTPUT"
-        
-        
-    prod-integration-testing:
-      needs: prod-deploy
-      runs-on: ubuntu-latest
-      steps:
-        - name: Test URL output using curl and jq
-          env:
-            URL: ${{needs.prod-deploy.outputs.APP_INGRESS_URL}}
-          run: |
-            echo $URL
-            echo "----------------------------------------"
-            curl http://$URL/live -s -k | jq -r .status | grep -i live
-  
+        # # - name: Fetch Kubernetest Cluster Details
+        # #   run: |
+        # #     kubectl version --short
+        # #     echo -----------------------------
+        # #     kubectl get nodes
