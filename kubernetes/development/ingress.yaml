@@ -20,5 +20,5 @@ spec:
           pathType: Prefix
     tls:
     - hosts:
-      - test.kolly38.com
+      - solar-system.test.kolly38.com
       secretName: ingress-local-tls
