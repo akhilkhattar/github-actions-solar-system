@@ -173,6 +173,9 @@ jobs:
 
     dev-deploy:
       needs: docker
+      environment:
+        name: development
+        url: http://${{steps.set-ingress-host-address.outputs.APP_INGRESS_HOST}}
       outputs:
         APP_INGRESS_URL: ${{steps.set-ingress-host-address.outputs.APP_INGRESS_HOST}}
       runs-on: ubuntu-latest
@@ -184,33 +187,6 @@ jobs:
           uses: azure/setup-kubectl@v1
           with:
             version: 'latest'
-
-        # - name: Set up stable version of Helm
-        #   uses: azure/setup-helm@v1
-        #   with:
-        #     version: 'v3.9.4'  # Specify a stable Helm version
-  
-        # - name: Remove outdated Helm repo (if exists)
-        #   run: |
-        #     helm repo remove ingress-nginx || echo "No existing ingress-nginx repo to remove."
-  
-        # - name: Clean Helm repository cache
-        #   run: |
-        #     rm -rf ~/.cache/helm/repositories
-        #     echo "Cleaned Helm repository cache."
-  
-        # - name: Add Ingress-Nginx repository
-        #   run: |
-        #     helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-  
-        # - name: Update Helm repositories
-        #   run: |
-        #     helm repo update
-  
-        # - name: Verify repositories
-        #   run: |
-        #     helm repo list
-
 
         - name: Configure AWS credentials
           uses: aws-actions/configure-aws-credentials@v1
