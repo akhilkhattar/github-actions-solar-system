@@ -128,50 +128,8 @@ jobs:
             docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
             docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-
-    #     # - name: Dockerhub login
-    #     #   uses: docker/login-action@v2.2.0
-    #     #   with:
-    #     #     username: ${{vars.DOCKERHUB_USERNAME}}
-    #     #     password: ${{secrets.DOCKERHUB_PASSWORD}}
-
-    #     # - name: GHCR login
-    #     #   uses: docker/login-action@v2.2.0
-    #     #   with:
-    #     #     registry: ghcr.io
-    #     #     username: ${{github.repository_owner}}
-    #     #     password: ${{secrets.GITHUB_TOKEN}}
-
-    #     # - name: Docker build for testing
-    #     #   uses: docker/build-push-action@v4
-    #     #   with:
-    #     #     context: .
-    #     #     push: false
-    #     #     tags: ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
-
-    #     # - name: Docker Image test
-    #     #   run: |
-    #     #     docker images
-    #     #     docker run --name solar-system-app -d \
-    #     #         -p 3000:3000 \
-    #     #         -e MONGO_URI=$MANGO_URI \
-    #     #         -e MONGO_USERNAME=$MONGO_USERNAME \
-    #     #         -e MONGO_PASSWORD=$MONGO_PASSWORD \
-    #     #         ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
-
-    #     #     echo Testing Image URL using wget
-    #     #     wget -q -O - 127.0.0.1:3000/live | grep live 
-
-    #     # - name: Container registry Push
-    #     #   uses: docker/build-push-action@v4
-    #     #   with:
-    #     #     context: .
-    #     #     push: true
-    #     #     tags: |
-    #     #         ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
-    #     #         ghcr.io/${{github.repository_owner}}/solar-system:${{github.sha}}
-
     dev-deploy:
+      if: contains(github.ref, 'feature/')
       needs: docker
       environment:
         name: development
@@ -196,42 +154,6 @@ jobs:
         - name: Update kubeconfig
           run: |
             aws eks update-kubeconfig --name demo-eks --region us-east-1
-
-        # - name: Check if namespace exists
-        #   id: check-namespace
-        #   run: |
-        #     if kubectl get namespace ingress-nginx; then
-        #       echo "Namespace exists"
-        #     else
-        #       echo "Namespace does not exist"
-        #       echo "namespace_exists=false" >> $GITHUB_ENV
-        #     fi
-          
-        # - name: Create namespace if not exists
-        #   if: env.namespace_exists == 'false'
-        #   run: |
-        #     kubectl create namespace ingress-nginx
-
-        # - name: Deploy NGINX Ingress Controller
-        #   run: |
-        #     kubectl delete job ingress-nginx-admission-create -n ingress-nginx
-        #     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
-
-
-        #     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
-
-        # - name: Check ingress controller
-        #   run: |
-        #     kubectl get pods -n ingress-nginx \
-        #     kubectl get svc -n ingress-nginx
-
-        # - name: Apply Deployment
-        #   run: | 
-        #     kubectl apply -f hello/
-            
-        # - name: Apply Service
-        #   run: kubectl apply -f hello/hello-world-service.yaml
-
 
         - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
           run: |
@@ -287,7 +209,8 @@ jobs:
             curl http://$URL/live -s -k | jq -r .status | grep -i live
 
     prod-deploy:
-      needs: dev-integration-testing
+      if: github.ref == 'refs/heads/main'
+      needs: docker
       environment:
         name: production
         url: http://${{steps.set-ingress-host-address.outputs.APP_INGRESS_HOST}}
@@ -354,6 +277,7 @@ jobs:
 
 
     integration-testing:
+      if: github.ref == 'refs/heads/main'
       needs: prod-deploy
       runs-on: ubuntu-latest
       steps:
