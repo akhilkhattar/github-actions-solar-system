@@ -225,6 +225,8 @@ jobs:
       if: github.ref == 'refs/heads/main'
       needs: docker
       uses: ./.github/workflows/reuse-deployment.yml
+      secrets:
+        mongodb-password: ${{env.MONGO_PASSWORD}}
       # environment:
       #   name: production
       #   url: http://${{steps.set-ingress-host-address.outputs.APP_INGRESS_HOST}}
