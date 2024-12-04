@@ -132,6 +132,8 @@ jobs:
       if: contains(github.ref, 'feature/')
       needs: docker
       uses: ./.github/workflows/reuse-deployment.yml
+      secrets:
+        mongodb-password: ${{env.MONGO_PASSWORD}}
       
       # environment:
       #   name: development

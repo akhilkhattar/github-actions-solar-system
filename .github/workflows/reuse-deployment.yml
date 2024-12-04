@@ -1,6 +1,11 @@
 name: Deployment - Reusable Workflow
 'on':
-  workflow_call: null
+  workflow_call:
+    secrets:
+      k8s-kubeconfig:
+        required: false
+      mongodb-password:
+        required: true
 jobs:
   reuse-deloy:
     environment:
@@ -21,6 +26,7 @@ jobs:
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig --name demo-eks --region us-east-1
+
       - name: Save Nginx Ingress Controller IP as a GITHUB Environment Variable
         run: |
           echo INGRESS_IP=$(kubectl get svc nginx-ingress-ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].hostname}') >> $GITHUB_ENV
@@ -33,8 +39,7 @@ jobs:
         env:
           NAMESPACE: '${{vars.NAMESPACE}}'
           REPLICAS: '${{vars.REPLICAS}}'
-          IMAGE: >-
-            211125465619.dkr.ecr.us-east-1.amazonaws.com/akhil-staging/solar-system:${{github.sha }}
+          IMAGE: akhil-staging/solar-system:${{github.sha }}
           INGRESS_IP: '${{env.INGRESS_IP}}'
       - name: check files
         run: |
@@ -46,7 +51,7 @@ jobs:
           kubectl -n ${{vars.NAMESPACE}} create secret generic mongo-db-creds \
           --from-literal=MONGO_URI=${{env.MONGO_URI}} \
           --from-literal=MONGO_USERNAME=${{env.MONGO_USERNAME}} \
-          --from-literal=MONGO_PASSWORD=${{secrets.MONGO_PASSWORD}} \
+          --from-literal=MONGO_PASSWORD=${{secrets.mongodb-password}} \
           --dry-run=client \
           -o yaml | kubectl apply -f - --validate=false
       - name: Deploy to Dev Env in EKS
