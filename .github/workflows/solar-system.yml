@@ -134,9 +134,9 @@ jobs:
       uses: ./.github/workflows/reuse-deployment.yml
       secrets:
         mongodb-password: ${{secrets.MONGO_PASSWORD}}
-      with:
         AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
         AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+      with:
         mongodb-uri: ${{vars.MONGO_URI}}
         mongodb-username: ${{vars.MONGO_USERNAME}}
         environment: development
