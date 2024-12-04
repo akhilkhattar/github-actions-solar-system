@@ -18,6 +18,10 @@ name: Deployment - Reusable Workflow
         default: dev
         required: true
         type: string
+    outputs:
+      application-url:
+        value: ${{jobs.reuse-deploy.outputs.APP_INGRESS_URL}}
+      
     secrets:
       k8s-kubeconfig:
         required: false

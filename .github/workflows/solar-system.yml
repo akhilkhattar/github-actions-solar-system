@@ -220,9 +220,9 @@ jobs:
       steps:
         - name: Test URL output using curl and jq
           env:
-            URL: ${{needs.dev-deploy.outputs.APP_INGRESS_URL}}
+            URL: ${{needs.dev-deploy.outputs.application-url}}
           run: |
-            echo $URL
+            echo $url
             echo "----------------------------------------"
             curl http://$URL/live -s -k | jq -r .status | grep -i live
 
@@ -309,7 +309,7 @@ jobs:
       steps:
         - name: Test URL output using curl and jq
           env:
-            URL: ${{needs.prod-deploy.outputs.APP_INGRESS_URL}}
+            URL: ${{needs.prod-deploy.outputs.application-url}}
           run: |
             echo $URL
             echo "----------------------------------------"
