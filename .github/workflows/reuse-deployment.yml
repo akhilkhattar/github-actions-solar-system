@@ -2,6 +2,14 @@ name: Deployment - Reusable Workflow
 'on':
   workflow_call:
     inputs:
+      AWS_ACCESS_KEY_ID: 
+        description:  'AWS Access Key ID'
+        required: true
+        type: string
+      AWS_SECRET_ACCESS_KEY:
+        description: 'AWS Secret Access Key'
+        required: true
+        type: string
       mongodb-uri:
         required: true
         type: string
@@ -28,7 +36,7 @@ name: Deployment - Reusable Workflow
       mongodb-password:
         required: true
 jobs:
-  reuse-deloy:
+  reuse-deploy:
     environment:
       name: ${{inputs.environment}}
       url: 'http://${{steps.set-ingress-host-address.outputs.APP_INGRESS_HOST}}'
@@ -44,6 +52,9 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: us-east-1
+          aws-access-key-id: ${{inputs.AWS_ACCESS_KEY_ID}}
+          aws-secret-access-key: ${{inputs.AWS_SECRET_ACCESS_KEY}}
+          
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig --name demo-eks --region us-east-1
