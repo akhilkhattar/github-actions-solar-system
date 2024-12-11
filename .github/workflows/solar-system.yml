@@ -38,14 +38,19 @@ jobs:
           with:
             node-version: 20
 
-        - name: cache npm dependencies
-          uses: actions/cache@v3
+        - name: NPM custom actions
+          uses: ./.github/custom-actions/npm-action/action.yml
           with:
-            path: node_modules
-            key: ${{runner.os}}-node-modules-${{hashFiles('package-lock.json')}}
+            path-of-folder: node_modules
+
+        # - name: cache npm dependencies
+        #   uses: actions/cache@v3
+        #   with:
+        #     path: node_modules
+        #     key: ${{runner.os}}-node-modules-${{hashFiles('package-lock.json')}}
     
-        - name: Install Dependencies
-          run: npm install
+        # - name: Install Dependencies
+        #   run: npm install
     
         - name: Unit Testing
           run: npm test
@@ -80,13 +85,19 @@ jobs:
       #   with:
       #     node-version: 18
 
-      - name: cache npm dependencies
-        uses: actions/cache@v3
+
+      - name: NPM custom actions
+        uses: ./.github/custom-actions/npm-action/action.yml
         with:
-          path: node_modules
-          key: ${{runner.os}}-node-modules-${{hashFiles('package-lock.json')}}
-      - name: Install Dependencies
-        run: npm install
+          path-of-folder: node_modules
+
+      # - name: cache npm dependencies
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: node_modules
+      #     key: ${{runner.os}}-node-modules-${{hashFiles('package-lock.json')}}
+      # - name: Install Dependencies
+      #   run: npm install
       - name: run code coverage
         continue-on-error: true
         run: npm run coverage
@@ -99,7 +110,7 @@ jobs:
 
     docker:
         name: containerization
-        # needs: [unit-testing, code-coverage]
+        needs: [unit-testing, code-coverage]
         runs-on: ubuntu-latest
         steps:
         - name: checkout repo
