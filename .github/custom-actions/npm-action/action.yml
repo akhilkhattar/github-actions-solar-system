@@ -1,9 +1,9 @@
-name: 'My Custin Action'
+name: 'My Custom Action'
 description: 'Intalling and Caching NPM packages'
 inputs:
   path-of-folder: #id of input
-  descripton: path of folder
-  required: true
+    descripton: path of folder
+    required: true
 runs:
   using: "composite"
   steps:
